@@ -133,17 +133,17 @@
     <h2>Pending invoices that make up the debt</h2>
     <p class="note">Foreign-suppliers balance with DC Equipment Ltd · control 31/05/2026 · USD. The top documents below account for ~90% of the balance, ordered by date (newest first). The remaining ~10% is grouped under the (+).</p>
     <table id="tInvTop">
-      <thead><tr><th>Date</th><th>Invoice</th><th>Balance (USD)</th><th>% of total</th></tr></thead>
+      <thead><tr><th>Date</th><th>Invoice</th><th>Ref.</th><th>Balance (USD)</th><th>% of total</th></tr></thead>
       <tbody></tbody>
-      <tfoot><tr><th>Subtotal — top documents</th><th id="invTopN"></th><th id="invTopSum"></th><th id="invTopPct"></th></tr></tfoot>
+      <tfoot><tr><th>Subtotal — top documents</th><th id="invTopN"></th><th></th><th id="invTopSum"></th><th id="invTopPct"></th></tr></tfoot>
     </table>
     <details class="rest">
       <summary><span class="plus"></span> Show remaining documents (smallest ~10%)<span class="muted" id="restMeta"></span></summary>
       <div class="inner">
         <table id="tInvRest">
-          <thead><tr><th>Date</th><th>Invoice</th><th>Balance (USD)</th><th>% of total</th></tr></thead>
+          <thead><tr><th>Date</th><th>Invoice</th><th>Ref.</th><th>Balance (USD)</th><th>% of total</th></tr></thead>
           <tbody></tbody>
-          <tfoot><tr><th>Subtotal — remaining</th><th id="invRestN"></th><th id="invRestSum"></th><th id="invRestPct"></th></tr></tfoot>
+          <tfoot><tr><th>Subtotal — remaining</th><th id="invRestN"></th><th></th><th id="invRestSum"></th><th id="invRestPct"></th></tr></tfoot>
         </table>
       </div>
     </details>
@@ -337,9 +337,9 @@ document.querySelector('#tTrans26 tbody').innerHTML = transfers2026.map(transRow
 // Top documents (~90% of balance), ordered by date, newest first.
 const invTotal = 2378506.64;
 const invTop = [
-  ['06/05/2026','24467',41395.0],['06/05/2026','24468',41395.0],['27/03/2026','24093',18237.18],
-  ['17/03/2026','23970',165580.0],['17/03/2026','23971',165580.0],['13/03/2026','23986',26692.42],
-  ['29/01/2026','23502',24221.05],['21/01/2026','23406',240576.0],['21/01/2026','23407',240576.0],
+  ['06/05/2026','24467',41395.0,'WA315'],['06/05/2026','24468',41395.0,'WA316'],['27/03/2026','24093',18237.18],
+  ['17/03/2026','23970',165580.0,'WA315'],['17/03/2026','23971',165580.0,'WA316'],['13/03/2026','23986',26692.42],
+  ['29/01/2026','23502',24221.05],['21/01/2026','23406',240576.0,'WA241'],['21/01/2026','23407',240576.0,'WA242'],
   ['01/08/2025','21356',26014.08],['11/06/2025','20747',41860.0],['09/05/2025','20309',360941.1],
   ['09/05/2025','20308',204636.18],['09/05/2025','20307',158108.2],['10/03/2025','19530',39325.25],
   ['10/03/2025','19531',39325.25],['07/03/2025','19537',23684.82],['07/02/2025','19106',167649.75],
@@ -369,7 +369,7 @@ const invRest = [
   ['05/02/2025','19101',8837.21],['05/02/2025','19099',1656.28],['17/12/2024','18471',4277.18],
   ['06/09/2024','17075',1.02],['06/09/2024','17074',-1.03]
 ];
-const invRow = r=>`<tr><td>${r[0]}</td><td>INV ${r[1]}</td><td>${fmt(r[2])}</td><td>${pct(r[2]/invTotal)}</td></tr>`;
+const invRow = r=>`<tr><td>${r[0]}</td><td>INV ${r[1]}</td><td>${r[3]?`<span class="pill warn">${r[3]}</span>`:''}</td><td>${fmt(r[2])}</td><td>${pct(r[2]/invTotal)}</td></tr>`;
 const sumAmt = a=>a.reduce((s,r)=>s+r[2],0);
 document.querySelector('#tInvTop tbody').innerHTML = invTop.map(invRow).join('');
 document.querySelector('#tInvRest tbody').innerHTML = invRest.map(invRow).join('');
