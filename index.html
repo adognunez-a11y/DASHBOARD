@@ -123,7 +123,7 @@
     <p class="note">Purchases = debt recognitions for imports (Foreign Suppliers credits) · Money sent = advances transferred to DCE NZ</p>
     <div class="chart-wrap"><canvas id="cYear"></canvas></div>
     <div class="readout">
-      In <b>2025</b> we sent <b>US$2,407,750</b> but only purchased <b>US$1,459,359</b> — we transferred <b>US$948,391 more</b> than we bought, and that surplus was applied against the opening debt (deleveraging). In <b>2026</b> the pattern flips: we purchased <b>US$1,002,371</b> but sent only <b>US$330,000</b>, a <b>US$672,371 shortfall</b> that pushes net debt back up.
+      In <b>2025</b> we sent <b>US$2,557,750</b> (18 transfers) but only purchased <b>US$1,459,359</b> — we transferred <b>US$1,098,391 more</b> than we bought, and that surplus was applied against the opening debt (deleveraging). In <b>2026</b> the pattern flips: we purchased <b>US$1,002,371</b> but sent only <b>US$330,000</b> (3 transfers), a <b>US$672,371 shortfall</b> that pushes net debt back up.
     </div>
   </div>
   <div class="card">
@@ -131,24 +131,34 @@
     <p class="note">Monthly import recognitions versus advances sent to NZ (US$)</p>
     <div class="chart-wrap tall"><canvas id="cFlows"></canvas></div>
   </div>
+  <div class="card">
+    <h2>Annual summary</h2>
+    <p class="note">Purchases, money sent and net balance per year</p>
+    <table id="tSummary">
+      <thead><tr><th>Year</th><th>Purchases</th><th>Money sent</th><th>Net (sent − bought)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="readout">A <b>positive</b> net (sent &gt; bought) reduces the debt; a <b>negative</b> net (bought &gt; sent) increases it.</div>
+  </div>
   <div class="grid2">
     <div class="card">
-      <h2>Annual summary</h2>
-      <p class="note">Purchases, money sent and net balance per year</p>
-      <table id="tSummary">
-        <thead><tr><th>Year</th><th>Purchases</th><th>Money sent</th><th>Net (sent − bought)</th></tr></thead>
+      <h2>Transfer detail to NZ — 2025</h2>
+      <p class="note">Account 1.1.1070.10.01 “Avances hechos a DCE NZ” · USD General Ledger · 18 transfers</p>
+      <table id="tTrans25">
+        <thead><tr><th>Date</th><th>Voucher</th><th>Description</th><th>USD</th></tr></thead>
         <tbody></tbody>
+        <tfoot><tr><th>TOTAL 2025</th><th></th><th></th><th>2,557,750</th></tr></tfoot>
       </table>
-      <div class="readout">A <b>positive</b> net (sent &gt; bought) reduces the debt; a <b>negative</b> net (bought &gt; sent) increases it.</div>
     </div>
     <div class="card">
-      <h2>2026 import document detail</h2>
-      <p class="note">Invoices that increased Foreign Suppliers · 14 documents</p>
-      <table id="tProv26">
-        <thead><tr><th>Date</th><th>Document</th><th>Credit (USD)</th></tr></thead>
+      <h2>Transfer detail to NZ — 2026</h2>
+      <p class="note">Same account · through May 2026 · 3 transfers</p>
+      <table id="tTrans26">
+        <thead><tr><th>Date</th><th>Voucher</th><th>Description</th><th>USD</th></tr></thead>
         <tbody></tbody>
-        <tfoot><tr><th>TOTAL (14 docs)</th><th></th><th>1,002,371</th></tr></tfoot>
+        <tfoot><tr><th>TOTAL 2026</th><th></th><th></th><th>330,000</th></tr></tfoot>
       </table>
+      <div class="readout">Combined cash transferred Jan-2025 → May-2026: <b>US$2,887,750</b> across <b>21 transfers</b>. The 2025 total includes the Dec-19 US$150,000 transfer that nets out of month-end balances (offset that month by the cross-application of advances against suppliers). FX adjustments excluded.</div>
     </div>
   </div>
 </section>
@@ -177,15 +187,8 @@ const brecha   = deudaCob.map((v,i)=>v-invUSD[i]);
 // Purchases = monthly import debt recognitions (Foreign Suppliers credits)
 const buyMonthly = [0,0,408206.79,106639.22,0,781559.01,68941.53,20518.6,38752.47,0,19442.45,14973.92,324.75,505373.05,0,409897.81,0,87100.25]; // aligned to `months` (Dec-24..May-26)
 // Money sent = monthly advances transferred to NZ (positive flows; Dec-25 drop is an offset, not a transfer)
-const sentMonthly= [0,477000,370000,280000,192000,893750,120000,0,0,0,15000,60000,0,200000,80000,50000,0,0];
-const buy2025=1459358.74, sent2025=2407750, buy2026=1002371.11, sent2026=330000;
-const prov26detail = [
-  ['01/21/2026','INV 23407',240576],['01/21/2026','INV 23406',240576],['01/29/2026','INV 23502',24221.05],
-  ['03/13/2026','INV 23986',26692.42],['03/17/2026','INV 23970',165580],['03/17/2026','INV 23971',165580],
-  ['03/27/2026','INV 24093',18237.18],['03/27/2026','INV 24094',13798.44],['03/27/2026','INV 24095',12640.13],
-  ['03/27/2026','INV 24092',7369.64],['05/05/2026','INV 24452',3000.92],['05/06/2026','INV 24467',41395],
-  ['05/06/2026','INV 24468',41395],['05/08/2026','INV 24484',1309.33]
-];
+const sentMonthly= [0,477000,370000,280000,192000,893750,120000,0,0,0,15000,60000,150000,200000,80000,50000,0,0];
+const buy2025=1459358.74, sent2025=2557750, buy2026=1002371.11, sent2026=330000;
 
 // KPIs
 const actual=deudaNeta[deudaNeta.length-1], minv=Math.min(...deudaNeta), maxv=Math.max(...deudaNeta);
@@ -259,8 +262,26 @@ document.querySelector('#tSummary tbody').innerHTML = summaryRows.map(r=>{
   return `<tr><td>${r[0]}</td><td>${fmt(r[1])}</td><td>${fmt(r[2])}</td><td><span class="pill ${cls}">${sign}${fmt(Math.abs(net))}</span></td></tr>`;
 }).join('');
 
-// 2026 document detail table
-document.querySelector('#tProv26 tbody').innerHTML = prov26detail.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${fmt(r[2])}</td></tr>`).join('');
+// Transfer detail (advances to NZ) — from USD General Ledger, account 1.1.1070.10.01
+const transfers2025 = [
+  ['06/01/2025','3','AVANCE A NZ - USD 190K',190000],['09/01/2025','79','USD 195.000 AVANCE NZ',195000],
+  ['30/01/2025','80','AVANCE NZ - USD 92.000',92000],['21/02/2025','96','AVANCE NZ USD 150K',150000],
+  ['28/02/2025','97','AVANCE NZ USD 220K',220000],['19/03/2025','146','AVANCE A NZ USD 160.000',160000],
+  ['24/03/2025','147','AVANCE A NZ USD 120.000',120000],['10/04/2025','238','AVANCE NZ USD 160.000',160000],
+  ['17/04/2025','239','AVANCE NZ USD 32.000',32000],['12/05/2025','266','AVANCE NZ 143.750 USD',143750],
+  ['16/05/2025','267','AVANCE NZ 200.000 USD',200000],['19/05/2025','268','AVANCE NZ 300.000 USD',300000],
+  ['20/05/2025','269','AVANCE NZ 200.000 USD',200000],['30/05/2025','270','AVANCE NZ 50.000 USD',50000],
+  ['16/06/2025','371','ENVIO 120K A NZ',120000],['15/10/2025','635','avance 15k por piezas',15000],
+  ['21/11/2025','731','TRASPASO 60K TO NZ',60000],['19/12/2025','681','AVANCE NZ USD 150.000',150000]
+];
+const transfers2026 = [
+  ['27/01/2026','58','TRANSFERENCIA A NZ USD 200.000',200000],
+  ['03/02/2026','111','AVANCE A NZ USD 80.000',80000],
+  ['25/03/2026','164','ENVIO USD 50.000 A NZ',50000]
+];
+const transRow = r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${fmt(r[3])}</td></tr>`;
+document.querySelector('#tTrans25 tbody').innerHTML = transfers2025.map(transRow).join('');
+document.querySelector('#tTrans26 tbody').innerHTML = transfers2026.map(transRow).join('');
 
 // Tabs
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
