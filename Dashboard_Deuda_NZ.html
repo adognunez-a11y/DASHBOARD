@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Net Debt Dashboard — DC Equipment SPA / NZ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f1f5f9; --panel:#ffffff; --panel2:#f8fafc; --line:#e2e8f0;
+    --txt:#0f172a; --muted:#64748b; --accent:#0284c7; --accent2:#6366f1;
+    --good:#059669; --bad:#dc2626; --warn:#d97706; --grid:rgba(15,23,42,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;padding:24px;max-width:1280px;margin:0 auto}
+  header h1{font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
+  header .sub{color:var(--muted);font-size:.85rem;margin-top:4px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}
+  .kpi{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  .kpi .lbl{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}
+  .kpi .val{font-size:1.45rem;font-weight:700;margin-top:6px}
+  .kpi .meta{font-size:.72rem;color:var(--muted);margin-top:4px}
+  .kpi .val.good{color:var(--good)} .kpi .val.bad{color:var(--bad)}
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-top:8px;flex-wrap:wrap}
+  .tab{background:none;border:none;color:var(--muted);padding:11px 18px;font-size:.9rem;cursor:pointer;border-bottom:2px solid transparent;font-weight:600}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab:hover{color:var(--txt)}
+  .view{display:none;padding-top:22px}
+  .view.active{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  .card h2{font-size:1.05rem;margin-bottom:4px}
+  .card p.note{color:var(--muted);font-size:.8rem;margin-bottom:14px}
+  .chart-wrap{position:relative;height:360px}
+  .chart-wrap.tall{height:420px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  table{width:100%;border-collapse:collapse;font-size:.82rem}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.68rem;letter-spacing:.04em}
+  tbody tr:hover{background:rgba(2,132,199,.06)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:600}
+  .pill.good{background:rgba(5,150,105,.15);color:var(--good)}
+  .pill.bad{background:rgba(220,38,38,.15);color:var(--bad)}
+  .pill.warn{background:rgba(217,119,6,.15);color:var(--warn)}
+  .readout{font-size:.85rem;color:var(--muted);background:var(--panel2);border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px;margin-top:14px}
+  .readout b{color:var(--txt)}
+  .toggle{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .toggle button{background:var(--panel2);border:1px solid var(--line);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:.78rem;cursor:pointer}
+  .toggle button.active{background:rgba(2,132,199,.12);color:var(--accent);border-color:var(--accent)}
+  footer{color:var(--muted);font-size:.72rem;text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+  @media(max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Net debt with the parent company (DC Equipment Ltd, New Zealand)</h1>
+  <div class="sub">DC Equipment SPA · Currency USD · Year-end 2024 – May 2026 · Source: Defontana (USD General Ledger, Customer Analysis)</div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="tabs">
+  <button class="tab active" data-v="evol">Net debt trend</button>
+  <button class="tab" data-v="cob">Inventory coverage</button>
+  <button class="tab" data-v="prov">Purchases vs payments</button>
+</div>
+
+<!-- TREND -->
+<section class="view active" id="evol">
+  <div class="card">
+    <h2>Monthly net debt with NZ</h2>
+    <p class="note">Net debt = Foreign Suppliers − Advances to DCE NZ − Foreign Customers NZ</p>
+    <div class="toggle" id="evolToggle">
+      <button class="active" data-mode="neta">Net debt</button>
+      <button data-mode="comp">Composition (gross vs advances)</button>
+    </div>
+    <div class="chart-wrap tall"><canvas id="cEvol"></canvas></div>
+    <div class="readout">
+      2025 was a year of strong <b>deleveraging</b>: net debt fell from <b>US$2,452,799</b> (year-end 2024) to <b>US$1,357,820</b> (year-end 2025), −44.6%, by sending advances to NZ that were applied against suppliers in December. In 2026 the trend reverses: it rises to <b>US$1,775,699</b> by May (+30.8%) due to new debt recognitions.
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2>Monthly change</h2>
+      <p class="note">Change in net debt versus the prior month (US$)</p>
+      <div class="chart-wrap"><canvas id="cVar"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Period milestones</h2>
+      <p class="note">Closing balances and cumulative change</p>
+      <table>
+        <thead><tr><th>Milestone</th><th>Net debt (USD)</th><th>Change</th></tr></thead>
+        <tbody>
+          <tr><td>Year-end 2024 (start)</td><td>2,452,799</td><td><span class="pill warn">max</span></td></tr>
+          <tr><td>Year-end 2025</td><td>1,357,820</td><td><span class="pill good">−1,094,979</span></td></tr>
+          <tr><td>May 2026 (latest)</td><td>1,775,699</td><td><span class="pill bad">+417,880</span></td></tr>
+        </tbody>
+      </table>
+      <div class="readout">The <b>lowest</b> point of the whole period is year-end 2025; the <b>highest</b>, year-end 2024. Export billing to NZ only appears as a meaningful reducer in April 2026 (US$254K).</div>
+    </div>
+  </div>
+</section>
+
+<!-- COVERAGE -->
+<section class="view" id="cob">
+  <div class="card">
+    <h2>Does inventory cover net debt? — USD</h2>
+    <p class="note">Inventory CLP converted to USD at the observed exchange rate on the first business day of the following month · NZ net debt in USD</p>
+    <div class="chart-wrap tall"><canvas id="cCob"></canvas></div>
+    <div class="readout">Coverage exceeded <b>100%</b> only in Jun–Jul 2025 (inventory was enough to cover all net debt). In 2026 it drops to lows: <b>41%</b> in March, recovering to <b>76%</b> in May. The gap (debt − inventory) widens again.</div>
+  </div>
+  <div class="card">
+    <h2>Monthly coverage and gap</h2>
+    <p class="note">Coverage % = inventory USD / net debt USD · gap in US$</p>
+    <div class="chart-wrap"><canvas id="cBrecha"></canvas></div>
+  </div>
+</section>
+
+<!-- PURCHASES VS PAYMENTS -->
+<section class="view" id="prov">
+  <div class="card">
+    <h2>Purchases from NZ vs money sent to NZ</h2>
+    <p class="note">Purchases = debt recognitions for imports (Foreign Suppliers credits) · Money sent = advances transferred to DCE NZ</p>
+    <div class="chart-wrap"><canvas id="cYear"></canvas></div>
+    <div class="readout">
+      In <b>2025</b> we sent <b>US$2,407,750</b> but only purchased <b>US$1,459,359</b> — we transferred <b>US$948,391 more</b> than we bought, and that surplus was applied against the opening debt (deleveraging). In <b>2026</b> the pattern flips: we purchased <b>US$1,002,371</b> but sent only <b>US$330,000</b>, a <b>US$672,371 shortfall</b> that pushes net debt back up.
+    </div>
+  </div>
+  <div class="card">
+    <h2>Monthly flows — purchases vs money sent</h2>
+    <p class="note">Monthly import recognitions versus advances sent to NZ (US$)</p>
+    <div class="chart-wrap tall"><canvas id="cFlows"></canvas></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2>Annual summary</h2>
+      <p class="note">Purchases, money sent and net balance per year</p>
+      <table id="tSummary">
+        <thead><tr><th>Year</th><th>Purchases</th><th>Money sent</th><th>Net (sent − bought)</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="readout">A <b>positive</b> net (sent &gt; bought) reduces the debt; a <b>negative</b> net (bought &gt; sent) increases it.</div>
+    </div>
+    <div class="card">
+      <h2>2026 import document detail</h2>
+      <p class="note">Invoices that increased Foreign Suppliers · 14 documents</p>
+      <table id="tProv26">
+        <thead><tr><th>Date</th><th>Document</th><th>Credit (USD)</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><th>TOTAL (14 docs)</th><th></th><th>1,002,371</th></tr></tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>Generated from Deuda_Neta_NZ_DC_Equipment.xlsx · Data available through May 2026 (June not yet closed)</footer>
+
+<script>
+const fmt = n => new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(n);
+const fmtUSD = n => 'US$'+fmt(n);
+const pct = n => (n*100).toFixed(0)+'%';
+
+const months = ['Dec-24','Jan-25','Feb-25','Mar-25','Apr-25','May-25','Jun-25','Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25','Jan-26','Feb-26','Mar-26','Apr-26','May-26'];
+const provBruta = [2461019.35,2457871.37,2856468.92,2962365.96,2962365.96,3696574.97,3765516.5,3786035.1,3824787.57,3824779.93,3844222.38,3845348.3,1366039.94,1871412.99,1871412.99,2281310.8,2281310.8,2368411.05];
+const avances   = [0,477000,847000,1127000,1319000,2212750,2332750,2332750,2332750,2332750,2347750,2407750,0,200000,280000,330000,330000,330000];
+const deudaNeta = [2452799.25,1972651.27,2001248.82,1827145.86,1635145.86,1475604.87,1424546.4,1445065,1483817.47,1483809.83,1488252.28,1429378.2,1357819.84,1663192.89,1583192.89,1943090.7,1688599.22,1775699.47];
+const varMensual= [null,-480147.98,28597.55,-174102.96,-192000,-159540.99,-51058.47,20518.6,38752.47,-7.64,4442.45,-58874.08,-71558.36,305373.05,-80000,359897.81,-254491.48,87100.25];
+
+// Coverage (excludes Dec-24): months Jan-25..May-26
+const cobMonths = months.slice(1);
+const invUSD   = [1586021.78,1656862.88,1438976.17,1409676.08,1459691.72,1489184.84,1504475.13,1224790.32,1280744.08,1296131.84,1058637.38,822681.05,856980.16,854594.23,797377.26,1242538.88,1346886.22];
+const deudaCob = deudaNeta.slice(1);
+const cobertura= invUSD.map((v,i)=>v/deudaCob[i]);
+const brecha   = deudaCob.map((v,i)=>v-invUSD[i]);
+
+// Purchases vs money sent
+// Purchases = monthly import debt recognitions (Foreign Suppliers credits)
+const buyMonthly = [0,0,408206.79,106639.22,0,781559.01,68941.53,20518.6,38752.47,0,19442.45,14973.92,324.75,505373.05,0,409897.81,0,87100.25]; // aligned to `months` (Dec-24..May-26)
+// Money sent = monthly advances transferred to NZ (positive flows; Dec-25 drop is an offset, not a transfer)
+const sentMonthly= [0,477000,370000,280000,192000,893750,120000,0,0,0,15000,60000,0,200000,80000,50000,0,0];
+const buy2025=1459358.74, sent2025=2407750, buy2026=1002371.11, sent2026=330000;
+const prov26detail = [
+  ['01/21/2026','INV 23407',240576],['01/21/2026','INV 23406',240576],['01/29/2026','INV 23502',24221.05],
+  ['03/13/2026','INV 23986',26692.42],['03/17/2026','INV 23970',165580],['03/17/2026','INV 23971',165580],
+  ['03/27/2026','INV 24093',18237.18],['03/27/2026','INV 24094',13798.44],['03/27/2026','INV 24095',12640.13],
+  ['03/27/2026','INV 24092',7369.64],['05/05/2026','INV 24452',3000.92],['05/06/2026','INV 24467',41395],
+  ['05/06/2026','INV 24468',41395],['05/08/2026','INV 24484',1309.33]
+];
+
+// KPIs
+const actual=deudaNeta[deudaNeta.length-1], minv=Math.min(...deudaNeta), maxv=Math.max(...deudaNeta);
+const varTotal=actual-deudaNeta[0];
+document.getElementById('kpis').innerHTML = `
+  <div class="kpi"><div class="lbl">Current net debt</div><div class="val">${fmtUSD(actual)}</div><div class="meta">May 2026</div></div>
+  <div class="kpi"><div class="lbl">Period minimum</div><div class="val good">${fmtUSD(minv)}</div><div class="meta">Dec 2025 (year-end)</div></div>
+  <div class="kpi"><div class="lbl">Period maximum</div><div class="val bad">${fmtUSD(maxv)}</div><div class="meta">Dec 2024 (opening)</div></div>
+  <div class="kpi"><div class="lbl">Total change Dec-24 → May-26</div><div class="val good">${fmtUSD(varTotal)}</div><div class="meta">−27.6%</div></div>`;
+
+// Chart defaults
+Chart.defaults.color='#64748b'; Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";
+const grid={color:'rgba(15,23,42,.08)'};
+const tip={callbacks:{label:c=>` ${c.dataset.label}: ${fmtUSD(c.parsed.y)}`}};
+
+// Trend (toggle)
+let cEvol;
+function drawEvol(mode){
+  if(cEvol) cEvol.destroy();
+  const ctx=document.getElementById('cEvol');
+  if(mode==='neta'){
+    cEvol=new Chart(ctx,{type:'line',data:{labels:months,datasets:[{label:'NZ net debt',data:deudaNeta,borderColor:'#0284c7',backgroundColor:'rgba(2,132,199,.14)',fill:true,tension:.3,pointRadius:3,borderWidth:2.5}]},
+      options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:tip},scales:{y:{grid,ticks:{callback:v=>'$'+fmt(v)}},x:{grid:{display:false}}}}});
+  } else {
+    cEvol=new Chart(ctx,{type:'line',data:{labels:months,datasets:[
+      {label:'Suppliers (gross)',data:provBruta,borderColor:'#dc2626',tension:.3,pointRadius:2,borderWidth:2},
+      {label:'Advances to NZ',data:avances,borderColor:'#d97706',tension:.3,pointRadius:2,borderWidth:2},
+      {label:'Net debt',data:deudaNeta,borderColor:'#0284c7',backgroundColor:'rgba(2,132,199,.12)',fill:true,tension:.3,pointRadius:2,borderWidth:2.5}]},
+      options:{maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:tip},scales:{y:{grid,ticks:{callback:v=>'$'+fmt(v)}},x:{grid:{display:false}}}}});
+  }
+}
+drawEvol('neta');
+document.querySelectorAll('#evolToggle button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#evolToggle button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); drawEvol(b.dataset.mode);
+});
+
+// Monthly change
+new Chart(document.getElementById('cVar'),{type:'bar',data:{labels:months,datasets:[{label:'Monthly change',data:varMensual,backgroundColor:varMensual.map(v=>v>0?'#dc2626':'#059669')}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:tip},scales:{y:{grid,ticks:{callback:v=>'$'+fmt(v)}},x:{grid:{display:false}}}}});
+
+// Coverage
+new Chart(document.getElementById('cCob'),{data:{labels:cobMonths,datasets:[
+    {type:'bar',label:'Inventory USD',data:invUSD,backgroundColor:'rgba(99,102,241,.5)',order:2},
+    {type:'line',label:'Net debt',data:deudaCob,borderColor:'#0284c7',tension:.3,pointRadius:2,borderWidth:2.5,order:1}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:tip},scales:{y:{grid,ticks:{callback:v=>'$'+fmt(v)}},x:{grid:{display:false}}}}});
+
+// Gap + coverage %
+new Chart(document.getElementById('cBrecha'),{data:{labels:cobMonths,datasets:[
+    {type:'bar',label:'Gap (debt − inv.)',data:brecha,backgroundColor:'rgba(220,38,38,.45)',yAxisID:'y',order:2},
+    {type:'line',label:'Coverage %',data:cobertura,borderColor:'#059669',tension:.3,pointRadius:2,borderWidth:2.5,yAxisID:'y1',order:1}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y1'?` Coverage: ${pct(c.parsed.y)}`:` Gap: ${fmtUSD(c.parsed.y)}`}}},
+    scales:{y:{grid,position:'left',ticks:{callback:v=>'$'+fmt(v)}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>pct(v)},suggestedMin:0,suggestedMax:1.2},x:{grid:{display:false}}}}});
+
+// Annual comparison (grouped bar)
+new Chart(document.getElementById('cYear'),{type:'bar',data:{labels:['2025','2026'],datasets:[
+    {label:'Purchases from NZ',data:[buy2025,buy2026],backgroundColor:'#dc2626'},
+    {label:'Money sent to NZ',data:[sent2025,sent2026],backgroundColor:'#059669'}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:tip},scales:{y:{grid,ticks:{callback:v=>'$'+fmt(v)}},x:{grid:{display:false}}}}});
+
+// Monthly flows (grouped bar)
+new Chart(document.getElementById('cFlows'),{type:'bar',data:{labels:months,datasets:[
+    {label:'Purchases from NZ',data:buyMonthly,backgroundColor:'#dc2626'},
+    {label:'Money sent to NZ',data:sentMonthly,backgroundColor:'#059669'}]},
+  options:{maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:tip},scales:{y:{grid,ticks:{callback:v=>'$'+fmt(v)}},x:{grid:{display:false}}}}});
+
+// Annual summary table
+const summaryRows=[['2025',buy2025,sent2025],['2026',buy2026,sent2026]];
+document.querySelector('#tSummary tbody').innerHTML = summaryRows.map(r=>{
+  const net=r[2]-r[1]; const cls=net>=0?'good':'bad'; const sign=net>=0?'+':'−';
+  return `<tr><td>${r[0]}</td><td>${fmt(r[1])}</td><td>${fmt(r[2])}</td><td><span class="pill ${cls}">${sign}${fmt(Math.abs(net))}</span></td></tr>`;
+}).join('');
+
+// 2026 document detail table
+document.querySelector('#tProv26 tbody').innerHTML = prov26detail.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${fmt(r[2])}</td></tr>`).join('');
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); document.getElementById(t.dataset.v).classList.add('active');
+});
+</script>
+</body>
+</html>
